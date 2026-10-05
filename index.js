@@ -3,10 +3,12 @@ import makeWASocket, {
   DisconnectReason
 } from "@whiskeysockets/baileys";
 
-import qrcode from "qrcode-terminal";
 import pino from "pino";
 
 const PREFIX = ".";
+
+// Your WhatsApp number in international format, without +
+const PHONE_NUMBER = "2348136045102";
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState("auth_info");
@@ -19,10 +21,10 @@ async function startBot() {
 
   sock.ev.on("creds.update", saveCreds);
 
-  sock.ev.on("connection.update", ({ connection, lastDisconnect, qr }) => {
-    if (qr) {
-      console.log("SCAN THIS QR CODE WITH WHATSAPP:");
-      qrcode.generate(qr, { small: true });
+  sock.ev.on("connection.update", async ({ connection, lastDisconnect }) => {
+
+    if (connection === "connecting") {
+      console.log("🔄 Connecting Goody Tech Bot...");
     }
 
     if (connection === "open") {
@@ -33,14 +35,36 @@ async function startBot() {
       const shouldReconnect =
         lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
 
-      console.log("Bot disconnected.");
+      console.log("❌ Bot disconnected.");
 
       if (shouldReconnect) {
-        console.log("Reconnecting...");
+        console.log("🔄 Reconnecting...");
         startBot();
       }
     }
   });
+
+  // Generate WhatsApp pairing code if this account is not yet linked
+  if (!state.creds.registered) {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      const code = await sock.requestPairingCode(PHONE_NUMBER);
+
+      console.log("");
+      console.log("╔══════════════════════════════════╗");
+      console.log("║     GOODY TECH BOT PAIRING       ║");
+      console.log("╠══════════════════════════════════╣");
+      console.log(`║  PAIRING CODE: ${code}           ║`);
+      console.log("╚══════════════════════════════════╝");
+      console.log("");
+      console.log("Open WhatsApp → Linked Devices →");
+      console.log("Link a device → Link with phone number");
+      console.log("Then enter the pairing code above.");
+    } catch (error) {
+      console.error("❌ Could not generate pairing code:", error);
+    }
+  }
 
   sock.ev.on("messages.upsert", async ({ messages }) => {
     const msg = messages[0];
