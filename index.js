@@ -6,9 +6,6 @@ import makeWASocket, {
 import pino from "pino";
 
 const PREFIX = ".";
-
-// Goody Tech WhatsApp number
-// International format — NO +
 const PHONE_NUMBER = "2348136045102";
 
 let pairingRequested = false;
@@ -26,6 +23,10 @@ async function startBot() {
 
   sock.ev.on("creds.update", saveCreds);
 
+  // ==============================
+  // CONNECTION
+  // ==============================
+
   sock.ev.on("connection.update", async (update) => {
     const {
       connection,
@@ -37,11 +38,9 @@ async function startBot() {
       console.log("🔄 Connecting Goody Tech Bot...");
     }
 
-    /*
-     * IMPORTANT:
-     * Baileys generates the pairing code after the
-     * connection emits the QR/initial connection event.
-     */
+    // Pairing code
+    // Baileys requires the socket to be ready before
+    // requesting the pairing code.
     if (
       qr &&
       !state.creds.registered &&
@@ -52,9 +51,8 @@ async function startBot() {
       try {
         console.log("🔐 Requesting WhatsApp pairing code...");
 
-        const code = await sock.requestPairingCode(
-          PHONE_NUMBER
-        );
+        const code =
+          await sock.requestPairingCode(PHONE_NUMBER);
 
         console.log("");
         console.log("╔══════════════════════════════════╗");
@@ -63,9 +61,16 @@ async function startBot() {
         console.log(`║  PAIRING CODE: ${code}           ║`);
         console.log("╚══════════════════════════════════╝");
         console.log("");
-        console.log("Open WhatsApp → Linked Devices →");
-        console.log("Link a device → Link with phone number");
-        console.log("Then enter the pairing code above.");
+        console.log(
+          "WhatsApp → Linked Devices → Link a device"
+        );
+        console.log(
+          "→ Link with phone number"
+        );
+        console.log("");
+        console.log(
+          "Enter the pairing code above."
+        );
         console.log("");
       } catch (error) {
         console.error(
@@ -92,16 +97,20 @@ async function startBot() {
       console.log("❌ Bot disconnected.");
       console.log("Status code:", statusCode);
 
-      if (statusCode === DisconnectReason.loggedOut) {
+      if (
+        statusCode === DisconnectReason.loggedOut
+      ) {
         console.log(
-          "⚠️ WhatsApp logged out. Manual relinking is required."
+          "⚠️ WhatsApp logged out. Relinking required."
         );
         return;
       }
 
-      console.log("🔄 Reconnecting Goody Tech Bot...");
-
       pairingRequested = false;
+
+      console.log(
+        "🔄 Reconnecting Goody Tech Bot..."
+      );
 
       setTimeout(() => {
         startBot();
@@ -139,10 +148,7 @@ async function startBot() {
 
         const jid = msg.key.remoteJid;
 
-        // ==============================
         // MENU
-        // ==============================
-
         if (
           command === "menu" ||
           command === "help"
@@ -150,13 +156,14 @@ async function startBot() {
           const menu = `
 ╭━━━〔 GOODY TECH BOT 〕━━━╮
 ┃
-┃ 👋 Hello! Welcome to Goody Tech Bot.
+┃ 👋 Welcome to Goody Tech Bot
 ┃
 ┃ 👤 Owner: Goody Tech
 ┃ ⚡ Prefix: .
 ┃
 ┣━━〔 GENERAL 〕━━
 ┃ .menu
+┃ .help
 ┃ .ping
 ┃ .owner
 ┃ .info
@@ -192,10 +199,7 @@ async function startBot() {
           });
         }
 
-        // ==============================
         // PING
-        // ==============================
-
         else if (command === "ping") {
           await sock.sendMessage(jid, {
             text:
@@ -204,10 +208,7 @@ async function startBot() {
           });
         }
 
-        // ==============================
         // OWNER
-        // ==============================
-
         else if (command === "owner") {
           await sock.sendMessage(jid, {
             text:
@@ -216,10 +217,7 @@ async function startBot() {
           });
         }
 
-        // ==============================
         // INFO
-        // ==============================
-
         else if (command === "info") {
           await sock.sendMessage(jid, {
             text:
@@ -240,7 +238,13 @@ async function startBot() {
   );
 }
 
-console.log("🚀 Starting Goody Tech WhatsApp Bot...");
+// ==============================
+// START BOT
+// ==============================
+
+console.log(
+  "🚀 Starting Goody Tech WhatsApp Bot..."
+);
 
 startBot().catch((error) => {
   console.error(
