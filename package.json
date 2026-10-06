@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "Goody Tech WhatsApp Bot",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "latest",
-    "pino": "latest",
-    "qrcode-terminal": "latest"
+    "@whiskeysockets/baileys": "^6.7.18",
+    "pino": "^9.4.0",
+    "qrcode-terminal": "^0.12.0"
   },
   "engines": {
     "node": "20.x"
